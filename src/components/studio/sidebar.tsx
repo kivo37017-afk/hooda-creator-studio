@@ -3,7 +3,9 @@ import { LayoutDashboard, Video, MessageSquare, BarChart3, Palette, Music2, Copy
 import { useQuery } from "@tanstack/react-query";
 import { myChannelQuery } from "@/lib/channel-queries";
 
-const items = [
+type NavItem = { to: string; label: string; icon: any; exact?: boolean; disabled?: boolean };
+
+const items: NavItem[] = [
   { to: "/studio", label: "Painel", icon: LayoutDashboard, exact: true },
   { to: "/studio/content", label: "Conteúdo", icon: Video },
   { to: "/studio/comments", label: "Comentários", icon: MessageSquare, disabled: true },
@@ -11,12 +13,12 @@ const items = [
   { to: "/studio/customisation", label: "Personalização", icon: Palette, disabled: true },
   { to: "/studio/audio", label: "Biblioteca de áudio", icon: Music2, disabled: true },
   { to: "/studio/copyright", label: "Direitos de autor", icon: Copyright, disabled: true },
-] as const;
+];
 
-const bottom = [
+const bottom: NavItem[] = [
   { to: "/studio/settings", label: "Definições", icon: Settings, disabled: true },
   { to: "/studio/help", label: "Ajuda", icon: HelpCircle, disabled: true },
-] as const;
+];
 
 export function StudioSidebar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -40,21 +42,21 @@ export function StudioSidebar() {
 
       <nav className="flex-1 overflow-y-auto py-2">
         {items.map((it) => {
-          const active = !it.disabled && isActive(it.to, "exact" in it ? it.exact : false);
+          const active = !it.disabled && isActive(it.to, it.exact);
           const Icon = it.icon;
-          const className = `flex items-center gap-5 pl-6 pr-3 py-2.5 text-sm transition-colors ${
+          const cls = `flex items-center gap-5 pl-6 pr-3 py-2.5 text-sm transition-colors ${
             active ? "bg-studio-active font-medium border-l-[3px] border-brand pl-[21px]" : "border-l-[3px] border-transparent"
           } ${it.disabled ? "text-muted-foreground/60 cursor-not-allowed" : "hover:bg-accent"}`;
           if (it.disabled) {
             return (
-              <div key={it.to} className={className}>
+              <div key={it.to} className={cls}>
                 <Icon className="h-5 w-5" />
                 <span>{it.label}</span>
               </div>
             );
           }
           return (
-            <Link key={it.to} to={it.to} className={className}>
+            <Link key={it.to} to={it.to as any} className={cls}>
               <Icon className="h-5 w-5" />
               <span>{it.label}</span>
             </Link>
