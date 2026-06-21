@@ -1,67 +1,57 @@
 import { useEffect, useState } from "react";
+import { HoodaLogo } from "@/components/HoodaLogo";
 
-export const SPLASH_EXIT_MS = 500;
+type Props = {
+  /**
+   * When true, the splash plays its fade-out transition instead of being
+   * removed instantly. The parent should keep this component mounted for
+   * EXIT_MS after setting this to true, then unmount it.
+   */
+  leaving?: boolean;
+};
 
-const LETTERS = [
-  { char: "h", color: "#5B3FCF" },
-  { char: "o", color: "#F26B3A" },
-  { char: "o", color: "#1FAFA6" },
-  { char: "d", color: "#6BA547" },
-  { char: "a", color: "#E94B8A" },
-];
+/** Must match the transition duration used for the leaving state below. */
+export const SPLASH_EXIT_MS = 450;
 
-const DELAYS = [0, 80, 160, 240, 320];
-
-type Props = { leaving?: boolean };
-
+/**
+ * Full-screen branded splash, shown only while the very first session
+ * check is in flight (app boot / hard refresh). Clean, minimal treatment —
+ * white background, centered wordmark with a slow, deliberate fade/scale-in
+ * and a matching fade-out on exit, no spinners or bouncing dots — matching
+ * the understated splash pattern used by Instagram, Facebook and TikTok.
+ */
 export function SplashScreen({ leaving = false }: Props) {
-  const [vis, setVis] = useState<boolean[]>(LETTERS.map(() => false));
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const timers = DELAYS.map((d, i) =>
-      setTimeout(() =>
-        setVis(p => { const n = [...p]; n[i] = true; return n; }), d + 120)
-    );
-    return () => timers.forEach(clearTimeout);
+    // Next frame, so the transition actually animates instead of starting
+    // in its end state.
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
   }, []);
 
+  const shown = visible && !leaving;
+
   return (
-    <div
+    <main
+      className="fixed inset-0 z-50 flex min-h-screen w-full items-center justify-center bg-white"
       role="status"
-      aria-label="A carregar"
+      aria-live="polite"
+      aria-label="A carregar a hooda"
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#ffffff",
         opacity: leaving ? 0 : 1,
-        transition: leaving ? `opacity ${SPLASH_EXIT_MS}ms ease` : "none",
-        pointerEvents: leaving ? "none" : "all",
+        transition: `opacity ${SPLASH_EXIT_MS}ms ease-in`,
       }}
     >
-      <div style={{ display: "flex", gap: 2 }}>
-        {LETTERS.map((l, i) => (
-          <span
-            key={i}
-            style={{
-              fontFamily: '"Nunito", "Quicksand", system-ui, sans-serif',
-              fontSize: "clamp(52px, 12vw, 80px)",
-              fontWeight: 800,
-              color: l.color,
-              lineHeight: 1,
-              display: "inline-block",
-              opacity:   vis[i] ? 1 : 0,
-              transform: vis[i] ? "translateY(0) scale(1)" : "translateY(20px) scale(0.8)",
-              transition: "opacity 0.4s cubic-bezier(0.34,1.56,0.64,1), transform 0.4s cubic-bezier(0.34,1.56,0.64,1)",
-            }}
-          >
-            {l.char}
-          </span>
-        ))}
+      <div
+        style={{
+          opacity: shown ? 1 : 0,
+          transform: shown ? "scale(1)" : "scale(0.9)",
+          transition: "opacity 1.1s cubic-bezier(0.16,1,0.3,1), transform 1.1s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <HoodaLogo size="lg" animate={false} />
       </div>
-    </div>
+    </main>
   );
 }
