@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { HoodaLogo } from "@/components/HoodaLogo";
@@ -14,7 +14,6 @@ export const Route = createFileRoute("/auth/bridge")({
 });
 
 function AuthBridge() {
-  const navigate = useNavigate();
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -30,7 +29,7 @@ function AuthBridge() {
 
       const { error } = await supabase.auth.setSession({ access_token, refresh_token });
 
-      // Limpa os tokens do URL imediatamente, nunca devem ficar visíveis
+      // Limpa os tokens do URL imediatamente — nunca devem ficar visíveis
       // no histórico do browser nem em logs de partilha de ecrã.
       window.history.replaceState({}, "", "/auth/bridge");
 
@@ -39,9 +38,13 @@ function AuthBridge() {
         return;
       }
 
-      navigate({ to: "/studio", replace: true });
+      // Navegação completa (não SPA) para garantir que o TanStack Start
+      // corre o beforeLoad já com a sessão gravada no localStorage pelo
+      // setSession() acima. Com navigate() SPA o router pode correr o
+      // beforeLoad no servidor antes de o cliente ter a sessão disponível.
+      window.location.replace("/studio");
     })();
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-studio-bg flex items-center justify-center px-4">
@@ -53,7 +56,7 @@ function AuthBridge() {
               Não foi possível entrar automaticamente. Tenta abrir o Studio outra vez a partir do Hooda.
             </p>
             <button
-              onClick={() => navigate({ to: "/auth", replace: true })}
+              onClick={() => window.location.replace("/auth")}
               className="text-sm font-medium text-brand underline underline-offset-4"
             >
               Ir para o ecrã de entrada
