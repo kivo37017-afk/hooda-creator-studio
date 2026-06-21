@@ -5,7 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Quicksand", "Nunito", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -110,4 +111,38 @@
 
 #lovable-badge {
   display: none !important;
+}
+
+/* Painel de marca do ecrã de login — gradiente vivo Hooda em movimento lento,
+   discreto e contínuo, não chamativo nem pesado. */
+.hooda-aurora {
+  background:
+    radial-gradient(120% 120% at 15% 15%, #5B3FCF 0%, transparent 55%),
+    radial-gradient(120% 120% at 85% 30%, #E94B8A 0%, transparent 50%),
+    radial-gradient(140% 140% at 50% 100%, #1FAFA6 0%, transparent 45%),
+    #221a4a;
+  background-size: 200% 200%;
+  animation: hooda-aurora-shift 18s ease-in-out infinite;
+}
+
+@keyframes hooda-aurora-shift {
+  0%, 100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%; }
+  50% { background-position: 20% 30%, 80% 40%, 40% 80%, 0% 0%; }
+}
+
+/* Entrada suave para cartões/listas que aparecem ao carregar uma página —
+   usar com a prop de delay inline (--enter-delay) para escalonar itens. */
+@keyframes hooda-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hooda-enter {
+  animation: hooda-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hooda-aurora { animation: none; }
+  .hooda-enter { animation: none; }
 }

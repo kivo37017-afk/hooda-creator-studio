@@ -41,7 +41,11 @@ export function StudioHeader() {
 
       <div className="ml-auto flex items-center gap-2">
         {channel && (
-          <Button asChild className="rounded-full h-9 bg-brand text-brand-foreground hover:bg-brand/90 px-4 gap-2">
+          <Button
+            asChild
+            className="rounded-full h-9 text-white px-4 gap-2 border-0 transition-transform hover:scale-[1.03]"
+            style={{ background: "linear-gradient(135deg,#5B3FCF,#8B5CF6)" }}
+          >
             <Link to="/studio/upload">
               <Video className="h-4 w-4" /> Criar
             </Link>
@@ -52,12 +56,17 @@ export function StudioHeader() {
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center text-sm font-medium">
-              {channel?.avatar_url ? (
-                <img src={channel.avatar_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                (channel?.name?.[0] ?? "?").toUpperCase()
-              )}
+            <button
+              className="h-9 w-9 rounded-full p-[2px] shrink-0 transition-transform hover:scale-105"
+              style={{ background: "linear-gradient(135deg,#5B3FCF 0%,#E94B8A 50%,#FFC93C 100%)" }}
+            >
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-muted overflow-hidden text-sm font-semibold">
+                {channel?.avatar_url ? (
+                  <img src={channel.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (channel?.name?.[0] ?? "?").toUpperCase()
+                )}
+              </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

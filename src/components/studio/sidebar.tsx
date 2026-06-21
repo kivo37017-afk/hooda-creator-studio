@@ -29,12 +29,16 @@ export function StudioSidebar() {
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-studio-sidebar h-[calc(100vh-56px)] sticky top-14">
       <div className="px-4 pt-6 pb-4 flex flex-col items-center text-center border-b border-border">
-        <div className="h-20 w-20 rounded-full bg-muted overflow-hidden flex items-center justify-center text-2xl font-medium text-muted-foreground">
-          {channel?.avatar_url ? (
-            <img src={channel.avatar_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            (channel?.name?.[0] ?? "?").toUpperCase()
-          )}
+        <div className="rounded-full p-[3px]" style={{ background: "linear-gradient(135deg,#5B3FCF 0%,#E94B8A 50%,#FFC93C 100%)" }}>
+          <div className="h-20 w-20 rounded-full p-[3px] bg-studio-sidebar">
+            <div className="h-full w-full rounded-full bg-muted overflow-hidden flex items-center justify-center text-2xl font-semibold text-muted-foreground">
+              {channel?.avatar_url ? (
+                <img src={channel.avatar_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                (channel?.name?.[0] ?? "?").toUpperCase()
+              )}
+            </div>
+          </div>
         </div>
         <div className="mt-3 text-xs text-muted-foreground">O teu canal</div>
         <div className="text-sm font-medium truncate w-full">{channel?.name ?? "Sem canal"}</div>
@@ -44,9 +48,9 @@ export function StudioSidebar() {
         {items.map((it) => {
           const active = !it.disabled && isActive(it.to, it.exact);
           const Icon = it.icon;
-          const cls = `flex items-center gap-5 pl-6 pr-3 py-2.5 text-sm transition-colors ${
-            active ? "bg-studio-active font-medium border-l-[3px] border-brand pl-[21px]" : "border-l-[3px] border-transparent"
-          } ${it.disabled ? "text-muted-foreground/60 cursor-not-allowed" : "hover:bg-accent"}`;
+          const cls = `flex items-center gap-5 pl-6 pr-3 py-2.5 text-sm transition-all duration-200 ${
+            active ? "bg-studio-active font-semibold border-l-[3px] border-brand pl-[21px]" : "border-l-[3px] border-transparent"
+          } ${it.disabled ? "text-muted-foreground/60 cursor-not-allowed" : "hover:bg-accent hover:pl-7"}`;
           if (it.disabled) {
             return (
               <div key={it.to} className={cls}>

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HoodaLogo } from "@/components/HoodaLogo";
 import { toast } from "sonner";
-import { Play, Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/studio/onboarding")({
   head: () => ({ meta: [{ title: "Criar canal — Hooda Studio" }] }),
@@ -68,14 +69,12 @@ function OnboardingPage() {
   return (
     <div className="min-h-screen bg-studio-bg flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-2xl">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="h-10 w-10 rounded-full bg-brand flex items-center justify-center">
-            <Play className="h-5 w-5 text-brand-foreground fill-current" />
-          </div>
-          <span className="text-2xl font-medium tracking-tight">Hooda <span className="text-muted-foreground">Studio</span></span>
+        <div className="flex items-center justify-center gap-2 mb-8 hooda-enter">
+          <HoodaLogo size="sm" animate={false} />
+          <span className="text-2xl font-medium tracking-tight text-muted-foreground">Studio</span>
         </div>
 
-        <Card className="p-8">
+        <Card className="p-8 hooda-enter" style={{ "--enter-delay": "80ms" } as CSSProperties}>
           <h1 className="text-xl font-medium mb-1">Cria o teu canal</h1>
           <p className="text-sm text-muted-foreground mb-6">Precisas de um canal para começar a publicar vídeos no Hooda.</p>
 

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { myChannelQuery, channelStatsQuery, myVideosQuery } from "@/lib/channel-queries";
 import { Card } from "@/components/ui/card";
@@ -33,20 +34,28 @@ function DashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="Visualizações" value={stats?.views ?? 0} icon={Eye} loading={isLoading} />
-            <StatCard label="Vídeos" value={stats?.total ?? 0} icon={VideoIcon} loading={isLoading} />
-            <StatCard label="Publicados" value={stats?.published ?? 0} icon={Globe} loading={isLoading} />
-            <StatCard
-              label="Última atividade"
-              value={stats?.lastActivity ? formatDistanceToNow(new Date(stats.lastActivity), { locale: pt, addSuffix: false }) : "—"}
-              icon={Activity}
-              loading={isLoading}
-              isText
-            />
+            <div className="hooda-enter" style={{ "--enter-delay": "0ms" } as CSSProperties}>
+              <StatCard label="Visualizações" value={stats?.views ?? 0} icon={Eye} loading={isLoading} />
+            </div>
+            <div className="hooda-enter" style={{ "--enter-delay": "60ms" } as CSSProperties}>
+              <StatCard label="Vídeos" value={stats?.total ?? 0} icon={VideoIcon} loading={isLoading} />
+            </div>
+            <div className="hooda-enter" style={{ "--enter-delay": "120ms" } as CSSProperties}>
+              <StatCard label="Publicados" value={stats?.published ?? 0} icon={Globe} loading={isLoading} />
+            </div>
+            <div className="hooda-enter" style={{ "--enter-delay": "180ms" } as CSSProperties}>
+              <StatCard
+                label="Última atividade"
+                value={stats?.lastActivity ? formatDistanceToNow(new Date(stats.lastActivity), { locale: pt, addSuffix: false }) : "—"}
+                icon={Activity}
+                loading={isLoading}
+                isText
+              />
+            </div>
           </div>
 
           {/* Recent videos */}
-          <Card className="p-0 overflow-hidden">
+          <Card className="p-0 overflow-hidden hooda-enter" style={{ "--enter-delay": "220ms" } as CSSProperties}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <h2 className="text-base font-medium">Últimos vídeos</h2>
               <Button asChild variant="ghost" size="sm" className="text-xs gap-1">
