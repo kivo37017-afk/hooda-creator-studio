@@ -1,10 +1,19 @@
-import { SplashScreen } from "./SplashScreen";
+import { useEffect, useState } from "react";
+import { SplashScreen, SPLASH_EXIT_MS } from "./SplashScreen";
 
 /**
- * Mostrado pelo router sempre que uma rota tem beforeLoad/loader em curso
- * (ex: verificação de sessão, verificação se o canal existe). Substitui o
- * que seria uma tela branca vazia por um instante.
+ * Mostrado pelo router sempre que um beforeLoad/loader está em curso.
+ * Usa o estado `leaving` para um exit suave em vez de desaparecer abruptamente.
  */
 export function RouterPending() {
-  return <SplashScreen />;
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    // Quando o componente desmonta (router terminou), dispara o exit
+    return () => {
+      setLeaving(true);
+    };
+  }, []);
+
+  return <SplashScreen leaving={leaving} />;
 }

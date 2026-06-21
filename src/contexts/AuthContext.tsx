@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  * logo apareça e desapareça tão depressa que pareça um glitch — mesmo
  * padrão usado no app principal do Hooda.
  */
-const MIN_SPLASH_MS = 700;
+const MIN_SPLASH_MS = 2800; // tempo da animação hooda completa
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
