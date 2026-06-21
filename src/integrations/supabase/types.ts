@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      channels: {
+        Row: {
+          avatar_url: string | null
+          banner_url: string | null
+          category: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          handle: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          handle: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          handle?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          category: string | null
+          channel_id: string
+          comments_count: number
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          likes_count: number
+          owner_id: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["video_status"]
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_path: string | null
+          views_count: number
+          visibility: Database["public"]["Enums"]["video_visibility"]
+        }
+        Insert: {
+          category?: string | null
+          channel_id: string
+          comments_count?: number
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          likes_count?: number
+          owner_id: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_path?: string | null
+          views_count?: number
+          visibility?: Database["public"]["Enums"]["video_visibility"]
+        }
+        Update: {
+          category?: string | null
+          channel_id?: string
+          comments_count?: number
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          likes_count?: number
+          owner_id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_path?: string | null
+          views_count?: number
+          visibility?: Database["public"]["Enums"]["video_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +159,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      video_status: "processing" | "published" | "failed"
+      video_visibility: "public" | "private" | "unlisted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +287,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      video_status: ["processing", "published", "failed"],
+      video_visibility: ["public", "private", "unlisted"],
+    },
   },
 } as const
