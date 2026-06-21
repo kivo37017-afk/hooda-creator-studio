@@ -21,7 +21,9 @@ export function StudioHeader() {
   }
 
   async function backToHooda() {
-    const { data } = await supabase.auth.getSession();
+    // Força refresh do token para garantir que access_token não expirou
+    // antes de o passar na query string ao Hooda.
+    const { data } = await supabase.auth.refreshSession();
     const access_token = data.session?.access_token;
     const refresh_token = data.session?.refresh_token;
     const base = "https://hooda.lovable.app";
