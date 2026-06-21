@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
 
-export const SPLASH_EXIT_MS = 600;
+export const SPLASH_EXIT_MS = 700;
 
 /*
-  ╔══════════════════════════════════════════════════════════════╗
-  ║  HOODA STUDIO — SPLASH ANIMATION                            ║
-  ║                                                              ║
-  ║  Sequência (total ≈ 2.8 s antes do exit):                   ║
-  ║  0.0s  fundo preto-roxo entra                                ║
-  ║  0.2s  linha horizontal cresce do centro (sweep)            ║
-  ║  0.7s  letras sobem uma a uma com glow colorido             ║
-  ║  1.6s  "studio" aparece em baixo pequeno                    ║
-  ║  2.0s  pulso de luz suave em torno do logo                  ║
-  ║  2.4s  tudo faz scale-up + fade-out (exit)                  ║
-  ╚══════════════════════════════════════════════════════════════╝
+  Animação de arranque da hooda Studio.
+  
+  Sequência:
+  0.0s  fundo roxo-escuro
+  0.3s  letras "hooda" surgem uma a uma com glow
+  1.1s  "studio" aparece por baixo
+  1.5s  pulso de luz suave
+  2.8s  fade-out + scale (controlado pelo pai via `leaving`)
 */
 
 const LETTERS = [
@@ -24,58 +21,33 @@ const LETTERS = [
   { char: "a", color: "#E94B8A", glow: "rgba(233,75,138,0.9)" },
 ];
 
-/* Delays para cada letra (ms) */
-const LETTER_DELAYS = [700, 850, 980, 1110, 1230];
+const LETTER_DELAYS = [300, 450, 580, 710, 830];
 
 type Props = { leaving?: boolean };
 
 export function SplashScreen({ leaving = false }: Props) {
-  /* ── Estados de cada fase ── */
-  const [sweepDone,   setSweepDone]   = useState(false); // linha cresceu
-  const [lettersDone, setLettersDone] = useState(false); // letras visíveis
-  const [studioDone,  setStudioDone]  = useState(false); // "studio" visível
-  const [pulseDone,   setPulseDone]   = useState(false); // anel de pulso
-  const [letterVis,   setLetterVis]   = useState<boolean[]>(LETTERS.map(() => false));
+  const [letterVis, setLetterVis]   = useState<boolean[]>(LETTERS.map(() => false));
+  const [studioVis, setStudioVis]   = useState(false);
+  const [pulseVis,  setPulseVis]    = useState(false);
+  const [sweepVis,  setSweepVis]    = useState(false);
 
   useEffect(() => {
-    /* Linha sweep */
-    const t0 = setTimeout(() => setSweepDone(true), 200);
+    const t0 = setTimeout(() => setSweepVis(true), 100);
 
-    /* Letras individuais */
-    const letterTimers = LETTER_DELAYS.map((delay, i) =>
-      setTimeout(() => {
-        setLetterVis(prev => {
-          const next = [...prev];
-          next[i] = true;
-          return next;
-        });
-      }, delay)
+    const lt = LETTER_DELAYS.map((d, i) =>
+      setTimeout(() => setLetterVis(p => { const n = [...p]; n[i] = true; return n; }), d)
     );
 
-    /* "studio" tag */
-    const t1 = setTimeout(() => {
-      setLettersDone(true);
-      setStudioDone(true);
-    }, 1600);
+    const t1 = setTimeout(() => setStudioVis(true), 1100);
+    const t2 = setTimeout(() => setPulseVis(true),  1500);
 
-    /* Pulso */
-    const t2 = setTimeout(() => setPulseDone(true), 2000);
-
-    return () => {
-      clearTimeout(t0);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      letterTimers.forEach(clearTimeout);
-    };
+    return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); lt.forEach(clearTimeout); };
   }, []);
-
-  /* ── Background gradient — roxo escuro próprio da hooda ── */
-  const bg = "radial-gradient(ellipse at 50% 60%, #1a0d3a 0%, #0d0618 55%, #060410 100%)";
 
   return (
     <div
-      role="status"
       aria-label="A carregar o Hooda Studio"
+      role="status"
       style={{
         position: "fixed",
         inset: 0,
@@ -84,176 +56,132 @@ export function SplashScreen({ leaving = false }: Props) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: bg,
-        /* Exit: scale ligeiro + fade */
-        opacity:   leaving ? 0   : 1,
-        transform: leaving ? "scale(1.06)" : "scale(1)",
+        background: "radial-gradient(ellipse at 50% 55%, #1e0d40 0%, #0e0620 55%, #07041a 100%)",
+        opacity:   leaving ? 0 : 1,
+        transform: leaving ? "scale(1.05)" : "scale(1)",
         transition: leaving
           ? `opacity ${SPLASH_EXIT_MS}ms cubic-bezier(0.4,0,1,1), transform ${SPLASH_EXIT_MS}ms cubic-bezier(0.4,0,1,1)`
           : "none",
+        pointerEvents: leaving ? "none" : "all",
       }}
     >
-      {/* ── Partículas de fundo (círculos de cor suaves) ── */}
+      {/* Partículas */}
       <Particles />
 
-      {/* ── Linha horizontal sweep ── */}
+      {/* Sweep line */}
       <div style={{
         position: "absolute",
-        top: "50%",
+        top: "calc(50% - 58px)",
         left: "50%",
-        transform: "translate(-50%, -50%)",
+        transform: "translateX(-50%)",
         height: 1.5,
-        width: sweepDone ? "min(340px, 80vw)" : 0,
-        background: "linear-gradient(90deg, transparent, rgba(91,63,207,0.6) 30%, rgba(233,75,138,0.6) 70%, transparent)",
-        transition: "width 0.45s cubic-bezier(0.4,0,0.2,1)",
+        width: sweepVis ? "min(360px,80vw)" : 0,
+        background: "linear-gradient(90deg, transparent, rgba(91,63,207,0.7) 30%, rgba(233,75,138,0.7) 70%, transparent)",
+        transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
         borderRadius: 999,
-        boxShadow: "0 0 12px 2px rgba(91,63,207,0.35)",
-        marginTop: -52,
+        boxShadow: "0 0 14px 2px rgba(91,63,207,0.4)",
       }} />
 
-      {/* ── Logo wrapper ── */}
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+      {/* Logo + studio */}
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
 
-        {/* Anel de pulso atrás do logo */}
-        <PulseRing active={pulseDone} />
+        {/* Pulse rings */}
+        {[0,1].map(i => (
+          <div key={i} style={{
+            position: "absolute",
+            top: "50%", left: "50%",
+            transform: "translate(-50%,-50%)",
+            width:  pulseVis ? (i===0 ? 260 : 360) : 0,
+            height: pulseVis ? (i===0 ? 110 : 145) : 0,
+            borderRadius: "50%",
+            border: `${i===0?1.5:1}px solid rgba(91,63,207,${i===0?0.35:0.15})`,
+            boxShadow: `0 0 ${i===0?24:48}px rgba(91,63,207,${i===0?0.12:0.06})`,
+            opacity: pulseVis ? 1 : 0,
+            transition: `all 0.9s cubic-bezier(0.4,0,0.2,1) ${i*0.18}s`,
+            pointerEvents: "none",
+          }} />
+        ))}
 
         {/* Letras */}
-        <div style={{ display: "flex", gap: 4, lineHeight: 1 }}>
+        <div style={{ display: "flex", gap: 3 }}>
           {LETTERS.map((l, i) => (
-            <span
-              key={i}
-              style={{
-                fontFamily: '"Nunito", "Quicksand", system-ui, sans-serif',
-                fontSize: "clamp(64px, 14vw, 100px)",
-                fontWeight: 800,
-                color: l.color,
-                display: "inline-block",
-                opacity:    letterVis[i] ? 1 : 0,
-                transform:  letterVis[i] ? "translateY(0) scale(1)" : "translateY(40px) scale(0.6)",
-                transition: `opacity 0.5s cubic-bezier(0.34,1.56,0.64,1), transform 0.5s cubic-bezier(0.34,1.56,0.64,1)`,
-                textShadow: letterVis[i]
-                  ? `0 0 30px ${l.glow}, 0 0 60px ${l.glow.replace("0.9", "0.4")}, 0 4px 20px rgba(0,0,0,0.5)`
-                  : "none",
-                filter: letterVis[i] ? "brightness(1.15)" : "brightness(1)",
-                letterSpacing: "-1px",
-              }}
-            >
+            <span key={i} style={{
+              fontFamily: '"Nunito","Quicksand",system-ui,sans-serif',
+              fontSize: "clamp(68px,15vw,108px)",
+              fontWeight: 800,
+              color: l.color,
+              display: "inline-block",
+              lineHeight: 1,
+              opacity:   letterVis[i] ? 1 : 0,
+              transform: letterVis[i] ? "translateY(0) scale(1)" : "translateY(44px) scale(0.55)",
+              transition: "opacity 0.55s cubic-bezier(0.34,1.56,0.64,1), transform 0.55s cubic-bezier(0.34,1.56,0.64,1)",
+              textShadow: letterVis[i]
+                ? `0 0 28px ${l.glow}, 0 0 56px ${l.glow.replace("0.9","0.35")}, 0 4px 16px rgba(0,0,0,0.6)`
+                : "none",
+            }}>
               {l.char}
             </span>
           ))}
         </div>
 
-        {/* "studio" tag */}
+        {/* "studio" */}
         <div style={{
-          letterSpacing: "0.35em",
-          fontSize: 12,
+          letterSpacing: "0.4em",
+          fontSize: 13,
           fontWeight: 700,
-          fontFamily: '"Nunito", system-ui, sans-serif',
+          fontFamily: '"Nunito",system-ui,sans-serif',
           textTransform: "uppercase",
-          color: "rgba(255,255,255,0.45)",
-          opacity:   studioDone ? 1 : 0,
-          transform: studioDone ? "translateY(0)" : "translateY(8px)",
+          color: "rgba(255,255,255,0.5)",
+          opacity:   studioVis ? 1 : 0,
+          transform: studioVis ? "translateY(0)" : "translateY(10px)",
           transition: "opacity 0.6s ease, transform 0.6s ease",
         }}>
           studio
         </div>
       </div>
 
-      {/* ── Linha inferior (barra de progresso decorativa) ── */}
-      <LoadBar active={sweepDone} leaving={leaving} />
-    </div>
-  );
-}
-
-/* ─── Anel de pulso ─── */
-function PulseRing({ active }: { active: boolean }) {
-  return (
-    <>
-      {[0, 1].map(i => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            width:  active ? (i === 0 ? 240 : 320) : 0,
-            height: active ? (i === 0 ? 100 : 130) : 0,
-            borderRadius: "50%",
-            border: `${i === 0 ? 1.5 : 1}px solid rgba(91,63,207,${i === 0 ? 0.35 : 0.15})`,
-            boxShadow: `0 0 ${i === 0 ? 20 : 40}px rgba(91,63,207,${i === 0 ? 0.15 : 0.08})`,
-            opacity: active ? 1 : 0,
-            transition: `all 0.8s cubic-bezier(0.4,0,0.2,1) ${i * 0.15}s`,
-            pointerEvents: "none",
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-/* ─── Barra de progresso decorativa ─── */
-function LoadBar({ active, leaving }: { active: boolean; leaving: boolean }) {
-  return (
-    <div style={{
-      position: "absolute",
-      bottom: 40,
-      left: "50%",
-      transform: "translateX(-50%)",
-      width: 120,
-      height: 2,
-      borderRadius: 999,
-      background: "rgba(255,255,255,0.08)",
-      overflow: "hidden",
-      opacity: leaving ? 0 : (active ? 1 : 0),
-      transition: "opacity 0.3s ease",
-    }}>
+      {/* Barra de progresso */}
       <div style={{
-        height: "100%",
-        borderRadius: 999,
-        background: "linear-gradient(90deg, #5B3FCF, #E94B8A, #1FAFA6)",
-        width: active ? "100%" : "0%",
-        transition: active ? "width 2.2s cubic-bezier(0.4,0,0.2,1)" : "none",
-      }} />
+        position: "absolute", bottom: 44,
+        left: "50%", transform: "translateX(-50%)",
+        width: 100, height: 2, borderRadius: 999,
+        background: "rgba(255,255,255,0.07)", overflow: "hidden",
+        opacity: sweepVis ? 1 : 0, transition: "opacity 0.4s ease",
+      }}>
+        <div style={{
+          height: "100%", borderRadius: 999,
+          background: "linear-gradient(90deg,#5B3FCF,#E94B8A,#1FAFA6)",
+          width: sweepVis ? "100%" : "0%",
+          transition: sweepVis ? "width 2.6s cubic-bezier(0.4,0,0.2,1)" : "none",
+        }} />
+      </div>
     </div>
   );
 }
 
-/* ─── Partículas de fundo ─── */
 function Particles() {
   const dots = [
-    { x: "15%", y: "20%", size: 3,  color: "#5B3FCF", delay: 0.3,  dur: 3.2 },
-    { x: "82%", y: "15%", size: 2,  color: "#E94B8A", delay: 0.8,  dur: 2.8 },
-    { x: "90%", y: "70%", size: 4,  color: "#1FAFA6", delay: 0.1,  dur: 4.0 },
-    { x: "8%",  y: "75%", size: 3,  color: "#F26B3A", delay: 1.0,  dur: 3.5 },
-    { x: "50%", y: "88%", size: 2,  color: "#6BA547", delay: 0.5,  dur: 2.6 },
-    { x: "70%", y: "30%", size: 2,  color: "#5B3FCF", delay: 1.2,  dur: 3.8 },
-    { x: "25%", y: "60%", size: 1.5,color: "#E94B8A", delay: 0.6,  dur: 2.9 },
-    { x: "60%", y: "78%", size: 2.5,color: "#F26B3A", delay: 0.2,  dur: 3.3 },
+    { x:"14%", y:"18%", s:3,   c:"#5B3FCF", d:0.4, r:3.1 },
+    { x:"83%", y:"14%", s:2,   c:"#E94B8A", d:0.9, r:2.7 },
+    { x:"89%", y:"68%", s:3.5, c:"#1FAFA6", d:0.2, r:3.9 },
+    { x:"9%",  y:"74%", s:2.5, c:"#F26B3A", d:1.1, r:3.4 },
+    { x:"51%", y:"87%", s:2,   c:"#6BA547", d:0.6, r:2.5 },
+    { x:"71%", y:"28%", s:2,   c:"#5B3FCF", d:1.3, r:3.7 },
+    { x:"26%", y:"58%", s:1.5, c:"#E94B8A", d:0.7, r:2.8 },
+    { x:"61%", y:"77%", s:2.5, c:"#F26B3A", d:0.3, r:3.2 },
   ];
-
   return (
     <>
-      {dots.map((d, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            left: d.x, top: d.y,
-            width:  d.size, height: d.size,
-            borderRadius: "50%",
-            background: d.color,
-            boxShadow: `0 0 ${d.size * 4}px ${d.color}`,
-            animation: `hoodaFloat ${d.dur}s ease-in-out ${d.delay}s infinite alternate`,
-            opacity: 0.7,
-          }}
-        />
+      {dots.map((d,i) => (
+        <div key={i} style={{
+          position:"absolute", left:d.x, top:d.y,
+          width:d.s, height:d.s, borderRadius:"50%",
+          background:d.c, boxShadow:`0 0 ${d.s*4}px ${d.c}`,
+          animation:`hoodaFloat ${d.r}s ease-in-out ${d.d}s infinite alternate`,
+          opacity:0.7,
+        }} />
       ))}
-      <style>{`
-        @keyframes hoodaFloat {
-          from { opacity: 0.4; transform: translateY(0px); }
-          to   { opacity: 0.9; transform: translateY(-8px); }
-        }
-      `}</style>
+      <style>{`@keyframes hoodaFloat{from{opacity:.4;transform:translateY(0)}to{opacity:.9;transform:translateY(-8px)}}`}</style>
     </>
   );
 }

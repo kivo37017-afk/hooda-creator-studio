@@ -7,13 +7,14 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SplashScreen, SPLASH_EXIT_MS } from "@/components/SplashScreen";
 
 function NotFoundComponent() {
   return (
@@ -106,6 +107,39 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/* ─── Splash gate — aparece SEMPRE no primeiro arranque ─── */
+function SplashGate({ children }: { children: ReactNode }) {
+  const { initializing } = useAuth();
+  const [leaving, setLeaving]   = useState(false);
+  const [mounted, setMounted]   = useState(false); // splash desmontado?
+
+  useEffect(() => {
+    // Quando auth terminou → dispara exit da animação
+    if (!initializing && !leaving) {
+      setLeaving(true);
+      // Desmonta o splash depois da transição completar
+      const t = setTimeout(() => setMounted(true), SPLASH_EXIT_MS + 50);
+      return () => clearTimeout(t);
+    }
+  }, [initializing]);
+
+  return (
+    <>
+      {/* Conteúdo real — já renderiza por baixo para pré-carregar */}
+      <div style={{
+        visibility: mounted ? "visible" : "hidden",
+        opacity:    mounted ? 1 : 0,
+        transition: mounted ? "opacity 0.3s ease" : "none",
+      }}>
+        {children}
+      </div>
+
+      {/* Splash por cima enquanto initializing */}
+      {!mounted && <SplashScreen leaving={leaving} />}
+    </>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
@@ -122,8 +156,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
-        <Toaster position="bottom-right" />
+        <SplashGate>
+          <Outlet />
+          <Toaster position="bottom-right" />
+        </SplashGate>
       </AuthProvider>
     </QueryClientProvider>
   );
