@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthBridgeRouteImport } from './routes/auth.bridge'
 import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
 import { Route as AuthenticatedStudioIndexRouteImport } from './routes/_authenticated/studio.index'
 import { Route as AuthenticatedStudioUploadRouteImport } from './routes/_authenticated/studio.upload'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthBridgeRoute = AuthBridgeRouteImport.update({
+  id: '/bridge',
+  path: '/bridge',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedStudioRoute = AuthenticatedStudioRouteImport.update({
   id: '/studio',
@@ -64,8 +70,9 @@ const AuthenticatedStudioContentRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/studio': typeof AuthenticatedStudioRouteWithChildren
+  '/auth/bridge': typeof AuthBridgeRoute
   '/studio/content': typeof AuthenticatedStudioContentRoute
   '/studio/onboarding': typeof AuthenticatedStudioOnboardingRoute
   '/studio/upload': typeof AuthenticatedStudioUploadRoute
@@ -73,7 +80,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/auth/bridge': typeof AuthBridgeRoute
   '/studio/content': typeof AuthenticatedStudioContentRoute
   '/studio/onboarding': typeof AuthenticatedStudioOnboardingRoute
   '/studio/upload': typeof AuthenticatedStudioUploadRoute
@@ -83,8 +91,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/_authenticated/studio': typeof AuthenticatedStudioRouteWithChildren
+  '/auth/bridge': typeof AuthBridgeRoute
   '/_authenticated/studio/content': typeof AuthenticatedStudioContentRoute
   '/_authenticated/studio/onboarding': typeof AuthenticatedStudioOnboardingRoute
   '/_authenticated/studio/upload': typeof AuthenticatedStudioUploadRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/studio'
+    | '/auth/bridge'
     | '/studio/content'
     | '/studio/onboarding'
     | '/studio/upload'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auth/bridge'
     | '/studio/content'
     | '/studio/onboarding'
     | '/studio/upload'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/studio'
+    | '/auth/bridge'
     | '/_authenticated/studio/content'
     | '/_authenticated/studio/onboarding'
     | '/_authenticated/studio/upload'
@@ -123,7 +135,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -148,6 +160,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/bridge': {
+      id: '/auth/bridge'
+      path: '/bridge'
+      fullPath: '/auth/bridge'
+      preLoaderRoute: typeof AuthBridgeRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/studio': {
       id: '/_authenticated/studio'
@@ -215,11 +234,31 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthBridgeRoute: typeof AuthBridgeRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthBridgeRoute: AuthBridgeRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
