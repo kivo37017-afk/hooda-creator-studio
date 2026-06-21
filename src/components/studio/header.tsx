@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Search, Video, Bell, Menu, LogOut, User } from "lucide-react";
+import { Search, Video, Bell, Menu, LogOut, User, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { HoodaLogo } from "@/components/HoodaLogo";
@@ -18,6 +18,17 @@ export function StudioHeader() {
     qc.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
+  }
+
+  async function backToHooda() {
+    const { data } = await supabase.auth.getSession();
+    const access_token = data.session?.access_token;
+    const refresh_token = data.session?.refresh_token;
+    const base = "https://hooda.lovable.app";
+    const url = access_token && refresh_token
+      ? `${base}/auth/bridge?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}`
+      : base;
+    window.location.href = url;
   }
 
   return (
@@ -40,6 +51,13 @@ export function StudioHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={backToHooda}
+          className="rounded-full h-9 gap-1.5 text-muted-foreground hidden sm:flex" title="Voltar ao Hooda">
+          <ArrowLeft className="h-4 w-4" /> Hooda
+        </Button>
+        <Button variant="ghost" size="icon" onClick={backToHooda} className="rounded-full sm:hidden" aria-label="Voltar ao Hooda">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         {channel && (
           <Button
             asChild
