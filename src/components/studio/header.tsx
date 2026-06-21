@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Search, Video, Bell, Menu, Play, LogOut, User } from "lucide-react";
+import { Search, Video, Bell, Menu, LogOut, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { HoodaLogo } from "@/components/HoodaLogo";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { myChannelQuery } from "@/lib/channel-queries";
@@ -25,11 +26,9 @@ export function StudioHeader() {
         <Menu className="h-5 w-5" />
       </button>
       <Link to="/studio" className="flex items-center gap-2 shrink-0">
-        <div className="h-7 w-7 rounded-full bg-brand flex items-center justify-center">
-          <Play className="h-3.5 w-3.5 text-brand-foreground fill-current" />
-        </div>
-        <span className="text-lg font-medium tracking-tight hidden sm:inline">
-          Hooda <span className="text-muted-foreground font-normal">Studio</span>
+        <HoodaLogo size="sm" animate={false} />
+        <span className="text-lg font-medium tracking-tight hidden sm:inline text-muted-foreground">
+          Studio
         </span>
       </Link>
 
