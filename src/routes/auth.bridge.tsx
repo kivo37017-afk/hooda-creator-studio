@@ -4,10 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { HoodaLogo } from "@/components/HoodaLogo";
 import { Loader2 } from "lucide-react";
 
-// Rota-ponte: o Hooda principal abre este URL com os tokens de sessão
-// já existentes (mesmo projeto Supabase dos dois). Aqui estabelecemos
-// essa sessão no Studio e seguimos direto para /studio — nunca mostra
-// o ecrã de login.
 export const Route = createFileRoute("/auth/bridge")({
   ssr: false,
   component: AuthBridge,
@@ -15,6 +11,7 @@ export const Route = createFileRoute("/auth/bridge")({
 
 function AuthBridge() {
   const [failed, setFailed] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -22,26 +19,36 @@ function AuthBridge() {
       const access_token = params.get("access_token");
       const refresh_token = params.get("refresh_token");
 
-      if (!access_token || !refresh_token) {
-        setFailed(true);
-        return;
-      }
-
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-
-      // Limpa os tokens do URL imediatamente — nunca devem ficar visíveis
-      // no histórico do browser nem em logs de partilha de ecrã.
+      // Limpa tokens do URL imediatamente
       window.history.replaceState({}, "", "/auth/bridge");
 
-      if (error) {
+      if (!access_token || !refresh_token) {
+        setErrorMsg("Tokens em falta no URL.");
         setFailed(true);
         return;
       }
 
-      // Navegação completa (não SPA) para garantir que o TanStack Start
-      // corre o beforeLoad já com a sessão gravada no localStorage pelo
-      // setSession() acima. Com navigate() SPA o router pode correr o
-      // beforeLoad no servidor antes de o cliente ter a sessão disponível.
+      const { data, error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+
+      if (error || !data.session) {
+        setErrorMsg(error?.message ?? "setSession não devolveu sessão.");
+        setFailed(true);
+        return;
+      }
+
+      // Confirma que a sessão ficou mesmo gravada antes de navegar
+      const { data: check } = await supabase.auth.getSession();
+      if (!check.session) {
+        setErrorMsg("Sessão não persiste após setSession.");
+        setFailed(true);
+        return;
+      }
+
+      // Navegação completa — o cliente já tem o token no localStorage
+      // antes de o servidor processar o próximo pedido
       window.location.replace("/studio");
     })();
   }, []);
@@ -53,7 +60,8 @@ function AuthBridge() {
         {failed ? (
           <>
             <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Não foi possível entrar automaticamente. Tenta abrir o Studio outra vez a partir do Hooda.
+              Não foi possível entrar automaticamente.
+              {errorMsg ? ` (${errorMsg})` : ""}
             </p>
             <button
               onClick={() => window.location.replace("/auth")}

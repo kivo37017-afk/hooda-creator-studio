@@ -4,7 +4,9 @@ import { StudioHeader } from "@/components/studio/header";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/studio")({
+  ssr: false,
   beforeLoad: async ({ location }) => {
+    if (typeof window === "undefined") return;
     const { data } = await supabase
       .from("channels")
       .select("id")
