@@ -50,10 +50,12 @@ function AuthBridge() {
       const { data: check } = await supabase.auth.getSession();
       log("getSession após setSession: " + (check.session ? "ok" : "null!!"));
 
-      log("a navegar para /studio em 2s...");
-      setTimeout(() => {
-        window.location.replace("/studio");
-      }, 2000);
+      if (!check.session) {
+        log("ERRO: sessão não persistida");
+        return;
+      }
+      log("a navegar para /studio...");
+      window.location.replace("/studio");
     })();
   }, []);
 
