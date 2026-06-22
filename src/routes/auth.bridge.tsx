@@ -9,65 +9,63 @@ export const Route = createFileRoute("/auth/bridge")({
 });
 
 function AuthBridge() {
-  const [logs, setLogs] = useState<string[]>([]);
-
-  const log = (msg: string) => {
-    console.log("[bridge]", msg);
-    setLogs(prev => [...prev, `${new Date().toISOString().slice(11,23)} ${msg}`]);
-  };
+  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
+  const [msg, setMsg] = useState("A iniciar sessão...");
 
   useEffect(() => {
     (async () => {
-      log("bridge iniciada");
-      log("hash: " + window.location.hash.slice(0, 40));
-      log("search: " + window.location.search.slice(0, 40));
-
       const params = new URLSearchParams(window.location.search);
       const access_token = params.get("access_token");
       const refresh_token = params.get("refresh_token");
 
-      log("access_token presente: " + !!access_token);
-      log("refresh_token presente: " + !!refresh_token);
-
-      if (!access_token || !refresh_token) {
-        log("ERRO: tokens em falta — a parar");
-        return;
-      }
-
       window.history.replaceState({}, "", "/auth/bridge");
 
-      log("a chamar setSession...");
-      const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-      log("setSession resultado — error: " + (error?.message ?? "nenhum"));
-      log("setSession resultado — session: " + (data.session ? "ok user=" + data.session.user.email : "null"));
+      if (!access_token || !refresh_token) {
+        window.location.replace("/auth");
+        return;
+      }
+
+      setMsg("A verificar credenciais...");
+
+      const { data, error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
 
       if (error || !data.session) {
-        log("ERRO: setSession falhou");
+        setStatus("error");
+        setMsg("Falha na autenticação. A redirecionar...");
+        setTimeout(() => window.location.replace("/auth"), 2000);
         return;
       }
 
-      log("a verificar getSession...");
-      const { data: check } = await supabase.auth.getSession();
-      log("getSession após setSession: " + (check.session ? "ok" : "null!!"));
+      setMsg("Sessão iniciada! A entrar no Studio...");
+      setStatus("ok");
 
-      if (!check.session) {
-        log("ERRO: sessão não persistida");
-        return;
-      }
-      log("a navegar para /studio...");
+      // Aguarda o Supabase guardar a sessão no storage antes de navegar
+      await new Promise((r) => setTimeout(r, 300));
       window.location.replace("/studio");
     })();
   }, []);
 
   return (
-    <div style={{ padding: 24, fontFamily: "monospace", fontSize: 13 }}>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 16,
+      fontFamily: "sans-serif",
+    }}>
       <HoodaLogo size="sm" animate={false} />
-      <h2 style={{ marginTop: 16 }}>Bridge — diagnóstico</h2>
-      <div style={{ marginTop: 12, background: "#f5f5f5", padding: 12, borderRadius: 8 }}>
-        {logs.length === 0 ? <p>A carregar...</p> : logs.map((l, i) => (
-          <div key={i} style={{ color: l.includes("ERRO") ? "red" : "#333" }}>{l}</div>
-        ))}
-      </div>
+      <p style={{
+        fontSize: 14,
+        color: status === "error" ? "red" : "#666",
+        marginTop: 12,
+      }}>
+        {msg}
+      </p>
     </div>
   );
 }
