@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { HoodaLogo } from "@/components/HoodaLogo";
 import { Loader2 } from "lucide-react";
 
+// Os tokens chegam no #hash — o servidor NUNCA vê o hash, só o browser.
+// Isso evita que o SSR intercepte e redirecione para /auth antes do JS carregar.
 export const Route = createFileRoute("/auth/bridge")({
   ssr: false,
   component: AuthBridge,
@@ -15,15 +17,17 @@ function AuthBridge() {
 
   useEffect(() => {
     (async () => {
-      const params = new URLSearchParams(window.location.search);
+      // Lê do hash (#access_token=...&refresh_token=...)
+      const hash = window.location.hash.slice(1); // remove o #
+      const params = new URLSearchParams(hash);
       const access_token = params.get("access_token");
       const refresh_token = params.get("refresh_token");
 
-      // Limpa tokens do URL imediatamente
+      // Limpa o hash imediatamente
       window.history.replaceState({}, "", "/auth/bridge");
 
       if (!access_token || !refresh_token) {
-        setErrorMsg("Tokens em falta no URL.");
+        setErrorMsg("Tokens em falta.");
         setFailed(true);
         return;
       }
@@ -34,21 +38,12 @@ function AuthBridge() {
       });
 
       if (error || !data.session) {
-        setErrorMsg(error?.message ?? "setSession não devolveu sessão.");
+        setErrorMsg(error?.message ?? "setSession falhou.");
         setFailed(true);
         return;
       }
 
-      // Confirma que a sessão ficou mesmo gravada antes de navegar
-      const { data: check } = await supabase.auth.getSession();
-      if (!check.session) {
-        setErrorMsg("Sessão não persiste após setSession.");
-        setFailed(true);
-        return;
-      }
-
-      // Navegação completa — o cliente já tem o token no localStorage
-      // antes de o servidor processar o próximo pedido
+      // Navegação completa — localStorage já tem a sessão
       window.location.replace("/studio");
     })();
   }, []);
