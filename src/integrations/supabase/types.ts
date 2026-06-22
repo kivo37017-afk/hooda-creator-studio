@@ -58,61 +58,25 @@ export type Database = {
       }
       profiles: {
         Row: {
-          age: number | null
-          avatar_color: string | null
           avatar_url: string | null
-          bio: string | null
-          cover_url: string | null
-          created_at: string | null
-          e2ee_public_key: string | null
-          full_name: string | null
+          created_at: string
+          display_name: string | null
           id: string
-          is_online: boolean
-          last_seen: string | null
-          location: string | null
-          msg_permission: string
-          phone_number: string | null
-          updated_at: string | null
-          username: string
-          website: string | null
+          updated_at: string
         }
         Insert: {
-          age?: number | null
-          avatar_color?: string | null
           avatar_url?: string | null
-          bio?: string | null
-          cover_url?: string | null
-          created_at?: string | null
-          e2ee_public_key?: string | null
-          full_name?: string | null
+          created_at?: string
+          display_name?: string | null
           id: string
-          is_online?: boolean
-          last_seen?: string | null
-          location?: string | null
-          msg_permission?: string
-          phone_number?: string | null
-          updated_at?: string | null
-          username: string
-          website?: string | null
+          updated_at?: string
         }
         Update: {
-          age?: number | null
-          avatar_color?: string | null
           avatar_url?: string | null
-          bio?: string | null
-          cover_url?: string | null
-          created_at?: string | null
-          e2ee_public_key?: string | null
-          full_name?: string | null
+          created_at?: string
+          display_name?: string | null
           id?: string
-          is_online?: boolean
-          last_seen?: string | null
-          location?: string | null
-          msg_permission?: string
-          phone_number?: string | null
-          updated_at?: string | null
-          username?: string
-          website?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
