@@ -107,17 +107,14 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-/* ─── Splash gate — aparece SEMPRE no primeiro arranque ─── */
 function SplashGate({ children }: { children: ReactNode }) {
   const { initializing } = useAuth();
-  const [leaving, setLeaving]   = useState(false);
-  const [mounted, setMounted]   = useState(false); // splash desmontado?
+  const [leaving, setLeaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Quando auth terminou → dispara exit da animação
     if (!initializing && !leaving) {
       setLeaving(true);
-      // Desmonta o splash depois da transição completar
       const t = setTimeout(() => setMounted(true), SPLASH_EXIT_MS + 50);
       return () => clearTimeout(t);
     }
@@ -125,7 +122,6 @@ function SplashGate({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {/* Conteúdo real — já renderiza por baixo para pré-carregar */}
       <div style={{
         visibility: mounted ? "visible" : "hidden",
         opacity:    mounted ? 1 : 0,
@@ -133,8 +129,6 @@ function SplashGate({ children }: { children: ReactNode }) {
       }}>
         {children}
       </div>
-
-      {/* Splash por cima enquanto initializing */}
       {!mounted && <SplashScreen leaving={leaving} />}
     </>
   );
@@ -146,9 +140,13 @@ function RootComponent() {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      // TOKEN_REFRESHED e INITIAL_SESSION não devem invalidar o router —
+      // causavam re-runs do beforeLoad a meio do setSession da bridge.
+      // Só invalidamos em eventos que realmente mudam o estado de autenticação.
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        router.invalidate();
+        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);

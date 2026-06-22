@@ -27,13 +27,26 @@ function AuthBridge() {
         return;
       }
 
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+      const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
 
-      if (error) {
-        setMsg(error.message);
+      if (error || !data.session) {
+        setMsg(error?.message ?? "Sessão inválida.");
         setFailed(true);
         return;
       }
+
+      // Aguarda o onAuthStateChange propagar antes de navegar
+      // para garantir que o AuthContext já está autenticado
+      await new Promise<void>((resolve) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            subscription.unsubscribe();
+            resolve();
+          }
+        });
+        // Timeout de segurança: navega mesmo que o evento não chegue
+        setTimeout(resolve, 1000);
+      });
 
       window.location.replace("/studio");
     })();
