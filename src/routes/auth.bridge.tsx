@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { HoodaLogo } from "@/components/HoodaLogo";
 import { Loader2 } from "lucide-react";
 
-// Os tokens chegam no #hash — o servidor NUNCA vê o hash, só o browser.
-// Isso evita que o SSR intercepte e redirecione para /auth antes do JS carregar.
 export const Route = createFileRoute("/auth/bridge")({
   ssr: false,
   component: AuthBridge,
@@ -13,37 +11,30 @@ export const Route = createFileRoute("/auth/bridge")({
 
 function AuthBridge() {
   const [failed, setFailed] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [msg, setMsg] = useState("");
 
   useEffect(() => {
     (async () => {
-      // Lê do hash (#access_token=...&refresh_token=...)
-      const hash = window.location.hash.slice(1); // remove o #
-      const params = new URLSearchParams(hash);
+      const params = new URLSearchParams(window.location.search);
       const access_token = params.get("access_token");
       const refresh_token = params.get("refresh_token");
 
-      // Limpa o hash imediatamente
       window.history.replaceState({}, "", "/auth/bridge");
 
       if (!access_token || !refresh_token) {
-        setErrorMsg("Tokens em falta.");
+        setMsg("Tokens em falta.");
         setFailed(true);
         return;
       }
 
-      const { data, error } = await supabase.auth.setSession({
-        access_token,
-        refresh_token,
-      });
+      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
 
-      if (error || !data.session) {
-        setErrorMsg(error?.message ?? "setSession falhou.");
+      if (error) {
+        setMsg(error.message);
         setFailed(true);
         return;
       }
 
-      // Navegação completa — localStorage já tem a sessão
       window.location.replace("/studio");
     })();
   }, []);
@@ -55,8 +46,7 @@ function AuthBridge() {
         {failed ? (
           <>
             <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Não foi possível entrar automaticamente.
-              {errorMsg ? ` (${errorMsg})` : ""}
+              Não foi possível entrar. {msg}
             </p>
             <button
               onClick={() => window.location.replace("/auth")}
